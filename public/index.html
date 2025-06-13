@@ -357,6 +357,47 @@
             letter-spacing: 0.02em;
         }
         
+        /* カスタマイズ表示・非表示 */
+        .settings-toggle {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 400;
+            color: #2c2c2c;
+        }
+        
+        .settings-toggle:hover {
+            background: #eee;
+        }
+        
+        .settings-toggle.expanded {
+            background: #2c2c2c;
+            color: white;
+        }
+        
+        .current-settings {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        .current-settings-title {
+            font-weight: 400;
+            color: #2c2c2c;
+            margin-bottom: 10px;
+        }
+        
+        .setting-summary {
+            margin-bottom: 5px;
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 20px 10px;
@@ -430,6 +471,7 @@
                 const [isLoading, setIsLoading] = useState(false);
                 const [error, setError] = useState('');
                 const [resultSyntaxName, setResultSyntaxName] = useState('');
+                const [showSettings, setShowSettings] = useState(false);
 
                 useEffect(() => {
                     fetchSyntaxes();
@@ -532,6 +574,17 @@
 
                 const selectedSyntaxData = syntaxes.find(s => s.id === selectedSyntax);
 
+                // 現在の設定を表示用に整形
+                const getCurrentSettingsDisplay = () => {
+                    if (!selectedSyntaxData) return '';
+                    
+                    return selectedSyntaxData.settings.map(setting => {
+                        const currentValue = settings[setting.id] || setting.default;
+                        const option = setting.options.find(opt => opt.value === currentValue);
+                        return `${setting.name}: ${option ? option.label : currentValue}`;
+                    }).join(', ');
+                };
+
                 return React.createElement('div', { className: 'container' },
                     React.createElement('div', { className: 'header' },
                         React.createElement('h1', null, '友Gemini真也構文'),
@@ -574,6 +627,65 @@
                                     placeholder: '今日の出来事、感想、思いなどを自由にお書きください',
                                     rows: 4
                                 })
+                            ),
+                            
+                            // 現在の設定表示
+                            selectedSyntaxData && React.createElement('div', { className: 'current-settings' },
+                                React.createElement('div', { className: 'current-settings-title' }, '現在の設定'),
+                                React.createElement('div', null, 
+                                    selectedPreset ? `プリセット: ${selectedSyntaxData.presets.find(p => p.id === selectedPreset)?.name || 'カスタム'}` : 'プリセット: カスタム',
+                                    React.createElement('br'),
+                                    getCurrentSettingsDisplay()
+                                )
+                            ),
+                            
+                            // 設定の表示/非表示切り替え
+                            selectedSyntaxData && React.createElement('div', {
+                                className: `settings-toggle ${showSettings ? 'expanded' : ''}`,
+                                onClick: () => setShowSettings(!showSettings)
+                            }, showSettings ? '詳細設定を隠す ▲' : '詳細設定を表示 ▼')
+                        ),
+
+                        // Step 2.5: カスタマイズ設定（条件付き表示）
+                        selectedSyntaxData && showSettings && React.createElement('div', { className: 'settings-container' },
+                            React.createElement('div', { className: 'settings-title' }, '詳細設定'),
+                            
+                            // プリセット選択
+                            React.createElement('div', { className: 'presets-container' },
+                                React.createElement('div', { className: 'presets-title' }, 'プリセット'),
+                                React.createElement('div', { className: 'presets-grid' },
+                                    selectedSyntaxData.presets.map(preset => 
+                                        React.createElement('div', {
+                                            key: preset.id,
+                                            className: `preset-card ${selectedPreset === preset.id ? 'selected' : ''}`,
+                                            onClick: () => handlePresetChange(preset.id)
+                                        },
+                                            React.createElement('div', { className: 'preset-name' }, preset.name),
+                                            React.createElement('div', { className: 'preset-description' }, preset.description)
+                                        )
+                                    )
+                                )
+                            ),
+                            
+                            // 個別設定
+                            React.createElement('div', { className: 'settings-grid' },
+                                selectedSyntaxData.settings.map(setting => 
+                                    React.createElement('div', { key: setting.id, className: 'setting-item' },
+                                        React.createElement('label', { className: 'setting-label' }, setting.name),
+                                        React.createElement('select', {
+                                            className: 'setting-select',
+                                            value: settings[setting.id] || setting.default,
+                                            onChange: (e) => handleSettingChange(setting.id, e.target.value)
+                                        },
+                                            setting.options.map(option => 
+                                                React.createElement('option', {
+                                                    key: option.value,
+                                                    value: option.value
+                                                }, option.label)
+                                            )
+                                        )
+                                    )
+                                )
                             )
                         ),
 
