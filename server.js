@@ -1,430 +1,654 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
-
-const app = express();
-const port = process.env.PORT || 3001;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// 静的ファイルの配信 - publicディレクトリを使用
-app.use(express.static('public'));
-app.use(express.static('.'));
-
-// ルートパスでindex.htmlを返す
-app.get('/', (req, res) => {
-  const indexPath = path.join(__dirname, 'public', 'index.html');
-  const fallbackPath = path.join(__dirname, 'index.html');
-  
-  // publicフォルダ内のindex.htmlを優先、なければルートのindex.htmlを使用
-  const fs = require('fs');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else if (fs.existsSync(fallbackPath)) {
-    res.sendFile(fallbackPath);
-  } else {
-    res.status(404).send('index.html not found');
-  }
-});
-
-// Gemini API setup
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-// 構文テンプレート（カスタマイズ対応）
-const syntaxTemplates = {
-  tomonaga: {
-    name: "友永構文",
-    description: "感情豊かな関西弁風の表現",
-    presets: [
-      {
-        id: 'standard',
-        name: '標準',
-        description: 'バランスの取れた友永構文',
-        settings: { intensity: 'normal', dialect: 'weak', length: 'normal' }
-      },
-      {
-        id: 'mild',
-        name: '控えめ',
-        description: '関西弁を抑えた上品な友永構文',
-        settings: { intensity: 'mild', dialect: 'none', length: 'short' }
-      },
-      {
-        id: 'extreme',
-        name: 'バチェラー級',
-        description: '感情全開の強烈な友永構文',
-        settings: { intensity: 'extreme', dialect: 'strong', length: 'long' }
-      }
-    ],
-    settings: [
-      {
-        id: 'intensity',
-        name: '強調度合い',
-        type: 'select',
-        options: [
-          { value: 'mild', label: '控えめ' },
-          { value: 'normal', label: '普通' },
-          { value: 'extreme', label: 'バチェラー級' }
-        ],
-        default: 'normal'
-      },
-      {
-        id: 'dialect',
-        name: '関西弁の強さ',
-        type: 'select',
-        options: [
-          { value: 'none', label: 'なし' },
-          { value: 'weak', label: '弱め' },
-          { value: 'strong', label: '強め' }
-        ],
-        default: 'weak'
-      },
-      {
-        id: 'length',
-        name: '文章の長さ',
-        type: 'select',
-        options: [
-          { value: 'short', label: '短め（100-150文字）' },
-          { value: 'normal', label: '普通（150-200文字）' },
-          { value: 'long', label: '長め（200-250文字）' }
-        ],
-        default: 'normal'
-      }
-    ],
-    generatePrompt: (content, settings) => {
-      const intensityMap = {
-        mild: '感情表現は控えめに、落ち着いた口調で',
-        normal: '適度に感情を込めて、親しみやすい口調で',
-        extreme: '感情を非常に強く表現し、テンション最大で'
-      };
-      
-      const dialectMap = {
-        none: '標準語で',
-        weak: '軽く関西弁を混ぜて（「やん」「やで」程度）',
-        strong: '関西弁を強く使って（「めっちゃ」「ほんま」「なんやねん」など多用）'
-      };
-      
-      const lengthMap = {
-        short: '100-150文字程度',
-        normal: '150-200文字程度',
-        long: '200-250文字程度'
-      };
-      
-      return `あなたは友永構文で文章を生成してください。
-
-設定：
-- 強調度合い: ${intensityMap[settings.intensity]}
-- 関西弁: ${dialectMap[settings.dialect]}
-- 文章長: ${lengthMap[settings.length]}
-
-特徴：
-- 親しみやすい口調
-- 「〜やん！」「〜やで！」などの語尾
-- 設定に応じた感情表現と関西弁の使用
-
-内容: ${content}
-
-上記の設定に従って、友永構文で文章を生成してください。`;
-    }
-  },
-  
-  koizumi: {
-    name: "小泉進次郎構文",
-    description: "抽象的で哲学的な表現",
-    presets: [
-      {
-        id: 'standard',
-        name: '標準',
-        description: '典型的な小泉進次郎構文',
-        settings: { abstraction: 'moderate', repetition: 'normal', length: 'normal' }
-      },
-      {
-        id: 'concrete',
-        name: '具体的',
-        description: '比較的わかりやすい小泉構文',
-        settings: { abstraction: 'concrete', repetition: 'minimal', length: 'short' }
-      },
-      {
-        id: 'philosophy',
-        name: '哲学モード',
-        description: '究極に抽象的な小泉構文',
-        settings: { abstraction: 'extreme', repetition: 'heavy', length: 'long' }
-      }
-    ],
-    settings: [
-      {
-        id: 'abstraction',
-        name: '抽象度',
-        type: 'select',
-        options: [
-          { value: 'concrete', label: '具体的に' },
-          { value: 'moderate', label: 'やや抽象的' },
-          { value: 'extreme', label: '完全に抽象的' }
-        ],
-        default: 'moderate'
-      },
-      {
-        id: 'repetition',
-        name: 'フレーズ反復度',
-        type: 'select',
-        options: [
-          { value: 'minimal', label: '少なめ' },
-          { value: 'normal', label: '普通' },
-          { value: 'heavy', label: '多め' }
-        ],
-        default: 'normal'
-      },
-      {
-        id: 'length',
-        name: '文章の長さ',
-        type: 'select',
-        options: [
-          { value: 'short', label: '短め（100-150文字）' },
-          { value: 'normal', label: '普通（150-200文字）' },
-          { value: 'long', label: '長め（200-250文字）' }
-        ],
-        default: 'normal'
-      }
-    ],
-    generatePrompt: (content, settings) => {
-      const abstractionMap = {
-        concrete: '具体的な内容も含めつつ、小泉進次郎風の言い回しで',
-        moderate: '適度に抽象的な表現を使い',
-        extreme: '極めて抽象的で哲学的に、具体性を避けて'
-      };
-      
-      const repetitionMap = {
-        minimal: 'フレーズの繰り返しは控えめに',
-        normal: '適度にフレーズを繰り返し',
-        heavy: '同じフレーズや概念を何度も繰り返して'
-      };
-      
-      const lengthMap = {
-        short: '100-150文字程度',
-        normal: '150-200文字程度',
-        long: '200-250文字程度'
-      };
-      
-      return `あなたは小泉進次郎構文で文章を生成してください。
-
-設定：
-- 抽象度: ${abstractionMap[settings.abstraction]}
-- 反復: ${repetitionMap[settings.repetition]}
-- 文章長: ${lengthMap[settings.length]}
-
-特徴：
-- 「つまり」「要するに」「ということは」を多用
-- 当たり前のことを深遠そうに表現
-- 「〜ということです」「〜なのです」で締める
-
-内容: ${content}
-
-上記の設定に従って、小泉進次郎構文で文章を生成してください。`;
-    }
-  },
-  
-  murakami: {
-    name: "村上春樹構文",
-    description: "独特な比喩と内省的な文体",
-    presets: [
-      {
-        id: 'standard',
-        name: '標準',
-        description: 'バランスの取れた村上春樹構文',
-        settings: { metaphor: 'normal', emotion: 'introspective', mystery: 'subtle', length: 'normal' }
-      },
-      {
-        id: 'simple',
-        name: 'シンプル',
-        description: '読みやすい村上春樹構文',
-        settings: { metaphor: 'minimal', emotion: 'introspective', mystery: 'none', length: 'short' }
-      },
-      {
-        id: 'artistic',
-        name: '芸術的',
-        description: '比喩と謎に満ちた村上春樹構文',
-        settings: { metaphor: 'rich', emotion: 'emotional', mystery: 'strong', length: 'long' }
-      }
-    ],
-    settings: [
-      {
-        id: 'metaphor',
-        name: '比喩の度合い',
-        type: 'select',
-        options: [
-          { value: 'minimal', label: '控えめ' },
-          { value: 'normal', label: '普通' },
-          { value: 'rich', label: 'ユニークな比喩多め' }
-        ],
-        default: 'normal'
-      },
-      {
-        id: 'emotion',
-        name: '感情の表出度',
-        type: 'select',
-        options: [
-          { value: 'detached', label: '淡々' },
-          { value: 'introspective', label: 'やや内省的' },
-          { value: 'emotional', label: '感情的' }
-        ],
-        default: 'introspective'
-      },
-      {
-        id: 'mystery',
-        name: '謎めいた要素',
-        type: 'select',
-        options: [
-          { value: 'none', label: 'なし' },
-          { value: 'subtle', label: '控えめ' },
-          { value: 'strong', label: '強め' }
-        ],
-        default: 'subtle'
-      },
-      {
-        id: 'length',
-        name: '文章の長さ',
-        type: 'select',
-        options: [
-          { value: 'short', label: '短め（100-150文字）' },
-          { value: 'normal', label: '普通（150-200文字）' },
-          { value: 'long', label: '長め（200-250文字）' }
-        ],
-        default: 'normal'
-      }
-    ],
-    generatePrompt: (content, settings) => {
-      const metaphorMap = {
-        minimal: '比喩表現は控えめに使い',
-        normal: '適度に詩的な比喩を使い',
-        rich: '独特で創造的な比喩を多用して'
-      };
-      
-      const emotionMap = {
-        detached: '感情を抑制し、客観的な視点で',
-        introspective: '内省的で静かな語り口で',
-        emotional: '感情を込めて、やや情緒的に'
-      };
-      
-      const mysteryMap = {
-        none: '分かりやすく表現し',
-        subtle: '少し謎めいた要素を含めて',
-        strong: '哲学的で謎めいた表現を多用して'
-      };
-      
-      const lengthMap = {
-        short: '100-150文字程度',
-        normal: '150-200文字程度',
-        long: '200-250文字程度'
-      };
-      
-      return `あなたは村上春樹風の文体で文章を生成してください。
-
-設定：
-- 比喩: ${metaphorMap[settings.metaphor]}
-- 感情: ${emotionMap[settings.emotion]}
-- 謎要素: ${mysteryMap[settings.mystery]}
-- 文章長: ${lengthMap[settings.length]}
-
-特徴：
-- 「〜のようなもの」「〜みたいな」を使用
-- 日常の出来事に深い意味を見出す
-- 間接的な感情表現
-
-内容: ${content}
-
-上記の設定に従って、村上春樹風の文体で文章を生成してください。`;
-    }
-  }
-};
-
-// API Routes
-app.get('/api/syntaxes', (req, res) => {
-  const syntaxes = Object.keys(syntaxTemplates).map(key => ({
-    id: key,
-    name: syntaxTemplates[key].name,
-    description: syntaxTemplates[key].description,
-    presets: syntaxTemplates[key].presets,
-    settings: syntaxTemplates[key].settings
-  }));
-  res.json(syntaxes);
-});
-
-app.post('/api/generate', async (req, res) => {
-  try {
-    const { syntaxId, content, settings = {} } = req.body;
-    
-    if (!syntaxId || !content) {
-      return res.status(400).json({ error: 'syntaxId and content are required' });
-    }
-    
-    const template = syntaxTemplates[syntaxId];
-    if (!template) {
-      return res.status(400).json({ error: 'Invalid syntax ID' });
-    }
-    
-    // デフォルト設定をマージ
-    const finalSettings = {};
-    template.settings.forEach(setting => {
-      finalSettings[setting.id] = settings[setting.id] || setting.default;
-    });
-    
-    const prompt = template.generatePrompt(content, finalSettings);
-    
-    // Gemini API call with retry logic
-    let result;
-    let attempts = 0;
-    const maxAttempts = 3;
-    
-    while (attempts < maxAttempts) {
-      try {
-        result = await model.generateContent(prompt);
-        break;
-      } catch (error) {
-        attempts++;
-        if (attempts === maxAttempts) {
-          throw error;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>友Gemini真也構文</title>
+    <!-- faviconを明示的に無効化 -->
+    <link rel="icon" href="data:,">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
-      }
-    }
-    
-    const response = await result.response;
-    const generatedText = response.text();
-    
-    res.json({
-      success: true,
-      generatedText: generatedText.trim(),
-      syntaxName: template.name,
-      usedSettings: finalSettings
-    });
-    
-  } catch (error) {
-    console.error('Generation error:', error);
-    res.status(500).json({ 
-      error: 'Failed to generate text',
-      details: error.message 
-    });
-  }
-});
+        
+        body {
+            font-family: 'Times New Roman', 'YuMincho', 'Hiragino Mincho ProN', 'Yu Mincho', 'MS PMincho', serif;
+            background: #f8f8f8;
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.7;
+            color: #2c2c2c;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        
+        .header {
+            padding: 60px 40px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            color: #1a1a1a;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 300;
+        }
+        
+        .main-content {
+            padding: 50px 40px;
+        }
+        
+        .step {
+            margin-bottom: 50px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .step:last-of-type {
+            border-bottom: none;
+        }
+        
+        .step-title {
+            font-size: 1.6rem;
+            font-weight: 400;
+            color: #2c2c2c;
+            margin-bottom: 30px;
+            letter-spacing: 0.02em;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #333;
+            color: #333;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 15px;
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+        
+        .syntax-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .syntax-card {
+            border: 1px solid #ddd;
+            padding: 30px 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            background: white;
+        }
+        
+        .syntax-card:hover {
+            border-color: #999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .syntax-card.selected {
+            border-color: #333;
+            background: #fafafa;
+        }
+        
+        .syntax-name {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            letter-spacing: 0.02em;
+        }
+        
+        .syntax-description {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-label {
+            font-weight: 400;
+            color: #2c2c2c;
+            margin-bottom: 12px;
+            display: block;
+            font-size: 1.1rem;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 18px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+            background: white;
+            resize: vertical;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #999;
+        }
+        
+        .input-field::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: #2c2c2c;
+            color: white;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+            font-family: inherit;
+            letter-spacing: 0.02em;
+        }
+        
+        .generate-btn:hover:not(:disabled) {
+            background: #1a1a1a;
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result-container {
+            background: #fafafa;
+            border: 1px solid #eee;
+            padding: 35px;
+            margin-top: 40px;
+        }
+        
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: #2c2c2c;
+            margin-bottom: 20px;
+            letter-spacing: 0.02em;
+        }
+        
+        .result-text {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #1a1a1a;
+            margin-bottom: 25px;
+            padding: 25px;
+            background: white;
+            border: 1px solid #eee;
+            min-height: 120px;
+            font-weight: 300;
+        }
+        
+        .copy-btn {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: 400;
+            transition: background 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .copy-btn:hover {
+            background: #555;
+        }
+        
+        .settings-container {
+            background: #fafafa;
+            border: 1px solid #eee;
+            padding: 35px;
+            margin-top: 30px;
+        }
+        
+        .settings-title {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #2c2c2c;
+            margin-bottom: 30px;
+            letter-spacing: 0.02em;
+        }
+        
+        .presets-container {
+            margin-bottom: 30px;
+        }
+        
+        .presets-title {
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: #2c2c2c;
+            margin-bottom: 15px;
+            letter-spacing: 0.02em;
+        }
+        
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .preset-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            background: white;
+        }
+        
+        .preset-card:hover {
+            border-color: #999;
+        }
+        
+        .preset-card.selected {
+            border-color: #333;
+            background: #f5f5f5;
+        }
+        
+        .preset-name {
+            font-weight: 400;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            letter-spacing: 0.02em;
+        }
+        
+        .preset-description {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+        
+        .setting-item {
+            background: white;
+            padding: 20px;
+            border: 1px solid #eee;
+        }
+        
+        .setting-label {
+            font-weight: 400;
+            color: #2c2c2c;
+            margin-bottom: 10px;
+            display: block;
+            font-size: 1rem;
+        }
+        
+        .setting-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .setting-select:focus {
+            outline: none;
+            border-color: #999;
+        }
+        
+        .error {
+            background: #f8f8f8;
+            color: #666;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+        
+        .footer {
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+            font-size: 0.9rem;
+            color: #999;
+            font-style: italic;
+            letter-spacing: 0.02em;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+            
+            .header {
+                padding: 40px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .main-content {
+                padding: 30px 20px;
+            }
+            
+            .syntax-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .presets-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .step-title {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Server error:', error);
-  res.status(500).json({ error: 'Internal server error' });
-});
+        const API_BASE_URL = window.location.origin;
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Health check: http://localhost:${port}/health`);
-});
+        function App() {
+            const [syntaxes, setSyntaxes] = useState([]);
+            const [selectedSyntax, setSelectedSyntax] = useState('');
+            const [selectedPreset, setSelectedPreset] = useState('');
+            const [content, setContent] = useState('');
+            const [settings, setSettings] = useState({});
+            const [result, setResult] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [resultSyntaxName, setResultSyntaxName] = useState('');
+
+            useEffect(() => {
+                fetchSyntaxes();
+            }, []);
+
+            useEffect(() => {
+                // 構文が選択されたときにデフォルト設定をセット
+                if (selectedSyntax) {
+                    const syntax = syntaxes.find(s => s.id === selectedSyntax);
+                    if (syntax) {
+                        const defaultSettings = {};
+                        syntax.settings.forEach(setting => {
+                            defaultSettings[setting.id] = setting.default;
+                        });
+                        setSettings(defaultSettings);
+                        setSelectedPreset('standard'); // デフォルトで標準プリセットを選択
+                    }
+                }
+            }, [selectedSyntax, syntaxes]);
+
+            const fetchSyntaxes = async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/syntaxes`);
+                    const data = await response.json();
+                    setSyntaxes(data);
+                } catch (error) {
+                    console.error('Failed to fetch syntaxes:', error);
+                    setError('構文データの取得に失敗しました');
+                }
+            };
+
+            const handlePresetChange = (presetId) => {
+                setSelectedPreset(presetId);
+                const syntax = syntaxes.find(s => s.id === selectedSyntax);
+                if (syntax) {
+                    const preset = syntax.presets.find(p => p.id === presetId);
+                    if (preset) {
+                        setSettings(preset.settings);
+                    }
+                }
+            };
+
+            const handleSettingChange = (settingId, value) => {
+                setSettings(prev => ({
+                    ...prev,
+                    [settingId]: value
+                }));
+                // カスタム設定になったらプリセット選択を解除
+                setSelectedPreset('');
+            };
+
+            const handleGenerate = async () => {
+                if (!selectedSyntax || !content.trim()) {
+                    setError('構文と内容を選択・入力してください');
+                    return;
+                }
+
+                setIsLoading(true);
+                setError('');
+                setResult('');
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/generate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            syntaxId: selectedSyntax,
+                            content: content.trim(),
+                            settings: settings
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        setResult(data.generatedText);
+                        setResultSyntaxName(data.syntaxName);
+                    } else {
+                        setError(data.error || '生成に失敗しました');
+                    }
+                } catch (error) {
+                    console.error('Generation error:', error);
+                    setError('サーバーエラーが発生しました');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const handleCopy = async () => {
+                try {
+                    await navigator.clipboard.writeText(result);
+                    alert('コピーしました');
+                } catch (error) {
+                    console.error('Copy failed:', error);
+                    alert('コピーに失敗しました');
+                }
+            };
+
+            const selectedSyntaxData = syntaxes.find(s => s.id === selectedSyntax);
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>友Gemini真也構文</h1>
+                        <p>文章を様々な構文で表現します</p>
+                    </div>
+                    
+                    <div className="main-content">
+                        {/* Step 1: 構文選択 */}
+                        <div className="step">
+                            <h2 className="step-title">
+                                <span className="step-number">一</span>
+                                構文を選択
+                            </h2>
+                            <div className="syntax-grid">
+                                {syntaxes.map(syntax => (
+                                    <div
+                                        key={syntax.id}
+                                        className={`syntax-card ${selectedSyntax === syntax.id ? 'selected' : ''}`}
+                                        onClick={() => setSelectedSyntax(syntax.id)}
+                                    >
+                                        <div className="syntax-name">{syntax.name}</div>
+                                        <div className="syntax-description">{syntax.description}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Step 2: 内容入力 */}
+                        <div className="step">
+                            <h2 className="step-title">
+                                <span className="step-number">二</span>
+                                内容を入力
+                            </h2>
+                            <div className="input-group">
+                                <label className="input-label">表現したいこと、表現したい気持ち</label>
+                                <textarea
+                                    className="input-field"
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    placeholder="今日の出来事、感想、思いなどを自由にお書きください"
+                                    rows="4"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Step 2.5: カスタマイズ設定 */}
+                        {selectedSyntaxData && (
+                            <div className="settings-container">
+                                <div className="settings-title">
+                                    詳細設定
+                                </div>
+                                
+                                {/* プリセット選択 */}
+                                <div className="presets-container">
+                                    <div className="presets-title">
+                                        プリセット
+                                    </div>
+                                    <div className="presets-grid">
+                                        {selectedSyntaxData.presets.map(preset => (
+                                            <div
+                                                key={preset.id}
+                                                className={`preset-card ${selectedPreset === preset.id ? 'selected' : ''}`}
+                                                onClick={() => handlePresetChange(preset.id)}
+                                            >
+                                                <div className="preset-name">{preset.name}</div>
+                                                <div className="preset-description">{preset.description}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                {/* 個別設定 */}
+                                <div className="settings-grid">
+                                    {selectedSyntaxData.settings.map(setting => (
+                                        <div key={setting.id} className="setting-item">
+                                            <label className="setting-label">{setting.name}</label>
+                                            <select
+                                                className="setting-select"
+                                                value={settings[setting.id] || setting.default}
+                                                onChange={(e) => handleSettingChange(setting.id, e.target.value)}
+                                            >
+                                                {setting.options.map(option => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 3: 生成 */}
+                        <div className="step">
+                            <h2 className="step-title">
+                                <span className="step-number">三</span>
+                                文章を生成
+                            </h2>
+                            <button
+                                className="generate-btn"
+                                onClick={handleGenerate}
+                                disabled={isLoading || !selectedSyntax || !content.trim()}
+                            >
+                                {isLoading ? '生成中...' : '生成する'}
+                            </button>
+                        </div>
+
+                        {/* エラー表示 */}
+                        {error && (
+                            <div className="error">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* 結果表示 */}
+                        {result && (
+                            <div className="result-container">
+                                <div className="result-title">
+                                    生成された{resultSyntaxName}
+                                </div>
+                                <div className="result-text">
+                                    {result}
+                                </div>
+                                <button className="copy-btn" onClick={handleCopy}>
+                                    文章をコピー
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="footer">
+                        Present for Y developed by T.H.
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
