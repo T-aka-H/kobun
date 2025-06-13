@@ -151,7 +151,7 @@ ${content}
   {
     id: 'koizumi',
     name: "小泉構文",
-    description: "小泉進次郎風の抽象的で哲学的な表現",
+    description: "小泉進次郎風の自明な再定義と抽象的表現",
     presets: [
       {
         id: 'standard',
@@ -178,15 +178,15 @@ ${content}
         name: '抽象度',
         type: 'select',
         options: [
-          { value: 'low', label: '具体的' },
+          { value: 'low', label: 'やや具体的' },
           { value: 'normal', label: '普通' },
-          { value: 'extreme', label: '超抽象的' }
+          { value: 'extreme', label: '完全に抽象的' }
         ],
         default: 'normal'
       },
       {
         id: 'repetition',
-        name: '同語反復の強さ',
+        name: 'キーワード反復の強さ',
         type: 'select',
         options: [
           { value: 'minimal', label: '最小限' },
@@ -200,50 +200,84 @@ ${content}
         name: '文章の長さ',
         type: 'select',
         options: [
-          { value: 'short', label: '短め（100-150文字）' },
-          { value: 'normal', label: '普通（150-200文字）' },
-          { value: 'long', label: '長め（200-250文字）' }
+          { value: 'short', label: '短め（120-180文字）' },
+          { value: 'normal', label: '普通（180-250文字）' },
+          { value: 'long', label: '長め（250-320文字）' }
         ],
         default: 'normal'
       }
     ],
     generatePrompt: (content, settings) => {
-      const abstractnessMap = {
-        low: '具体的で分かりやすい表現を心がけ、',
-        normal: '適度に抽象的な表現を交えて、',
-        extreme: '極めて抽象的で哲学的な表現を多用し、'
+      const abstractnessConfig = {
+        low: {
+          level: 'やや具体的な表現を保ちつつ、時折抽象的な概念を織り交ぜ',
+          conclusion: '比較的明確で理解しやすい結論に'
+        },
+        normal: {
+          level: '適度に抽象的で概念的な表現を使い',
+          conclusion: '当たり前のことを深い洞察のように語る結論に'
+        },
+        extreme: {
+          level: '極めて抽象的で哲学的な表現を多用し、具体的内容を概念で包み込み',
+          conclusion: '完全に抽象的で不明瞭な結論に'
+        }
       };
       
-      const repetitionMap = {
-        minimal: '同語反復は控えめに使用',
-        normal: '効果的な同語反復を適度に使用',
-        heavy: '同語反復を多用して独特のリズムを作る'
+      const repetitionConfig = {
+        minimal: 'キーワードの反復は控えめにし、自然な流れを重視',
+        normal: '重要なキーワードやフレーズを効果的に反復して強調',
+        heavy: 'キーワードを何度も反復し、因果関係の表現を多用'
       };
       
-      const lengthMap = {
-        short: '100-150文字程度',
-        normal: '150-200文字程度',
-        long: '200-250文字程度'
+      const lengthConfig = {
+        short: '120-180文字程度（簡潔な定義→抽象的説明→結論）',
+        normal: '180-250文字程度（詳しい定義→概念的展開→深い結論）',
+        long: '250-320文字程度（複数の定義→抽象的論理展開→哲学的結論）'
       };
       
-      return `あなたは小泉進次郎構文で文章を生成してください。
+      return `あなたは、日本の政治家、小泉進次郎の話し方を完全に模倣するAIです。彼の特徴的な言葉遣い、論理展開、強調の仕方を理解し、完璧に再現してください。
 
-特徴：
-- ${abstractnessMap[settings.abstractness]}
-- ${repetitionMap[settings.repetition]}
-- 「〜ということです」「〜というものです」などの語尾
-- 一見深そうで実は当たり前のことを言う
-- 文章長: ${lengthMap[settings.length]}
+# 小泉進次郎構文の核心的特徴
+1. **キーワードの戦略的反復**
+   ${repetitionConfig[settings.repetition]}
+   「〜することによって、〜という結果が生まれる」の因果関係表現を効果的に使用
 
-内容: ${content}
+2. **自明なことの再定義**
+   当たり前の事実や概念を、新しい発見や深い洞察のように語る
+   「〇〇とは、〇〇である」という形式を多用
 
-上記の設定に従って、小泉構文で文章を生成してください。`;
+3. **抽象的・概念的な表現**
+   ${abstractnessConfig[settings.abstractness].level}
+   具体的な内容よりも広い概念や本質的意義に焦点
+
+4. **強い断定とポエム的表現**
+   断定的に語りながら、詩的で抽象的な表現を混在
+   論理的飛躍を含む独特の展開
+
+# 必須の生成ルール
+- 一人称は設けず、客観的または第三者的視点で語る
+- 「〜することによって、〜という結果が生まれる」「〜とは、〜である」を効果的に使用
+- 提供されたトピックを反復して使用し、強調する
+- 具体的内容を抽象的な言葉で包み込む
+- ${abstractnessConfig[settings.abstractness].conclusion}
+- ${lengthConfig[settings.length]}
+
+# 小泉進次郎の典型的パターン（参考）
+「〇〇することによって、〇〇するという結果が生まれる」
+「〇〇とは、まさに〇〇である」
+「これは重要なことです。なぜなら〜だからです」
+「〇〇をするということは、〇〇をしたということです」
+
+# ユーザーの内容
+${content}
+
+上記の特徴と設定を完全に理解し、小泉進次郎らしい論理展開と表現で文章を生成してください。`;
     }
   },
   {
     id: 'murakami',
     name: "村上春樹構文",
-    description: "村上春樹風の独特な比喩と文体",
+    description: "村上春樹風の独特な比喩と内省的な一人称語り",
     presets: [
       {
         id: 'standard',
@@ -260,7 +294,7 @@ ${content}
       {
         id: 'extreme',
         name: 'ハルキスト級',
-        description: '濃厚な村上春樹ワールド',
+        description: '濃厚な村上春樹ワールド全開',
         settings: { metaphor: 'heavy', melancholy: 'heavy', length: 'long' }
       }
     ],
@@ -278,12 +312,12 @@ ${content}
       },
       {
         id: 'melancholy',
-        name: '哀愁の深さ',
+        name: '哀愁と内省の深さ',
         type: 'select',
         options: [
           { value: 'light', label: '軽やか' },
           { value: 'normal', label: '普通' },
-          { value: 'heavy', label: '深い哀愁' }
+          { value: 'heavy', label: '深い哀愁と孤独感' }
         ],
         default: 'normal'
       },
@@ -292,44 +326,91 @@ ${content}
         name: '文章の長さ',
         type: 'select',
         options: [
-          { value: 'short', label: '短め（100-150文字）' },
-          { value: 'normal', label: '普通（150-200文字）' },
-          { value: 'long', label: '長め（200-250文字）' }
+          { value: 'short', label: '短め（120-180文字）' },
+          { value: 'normal', label: '普通（180-250文字）' },
+          { value: 'long', label: '長め（250-320文字）' }
         ],
         default: 'normal'
       }
     ],
     generatePrompt: (content, settings) => {
-      const metaphorMap = {
-        light: '軽やかで理解しやすい比喩を時々使い、',
-        normal: '独特で印象的な比喩を効果的に使い、',
-        heavy: '深く印象的な比喩を多用し、現実と幻想を交錯させ、'
+      const metaphorConfig = {
+        light: {
+          style: '理解しやすく美しい比喩を時々使い',
+          approach: '日常的な事柄を軽やかに表現'
+        },
+        normal: {
+          style: '独特で印象的な比喩を効果的に使い',
+          approach: '突拍子もないが妙に納得させられる「まるで〜のような」表現を織り込み'
+        },
+        heavy: {
+          style: '深く抽象的で独創的な比喩を多用し',
+          approach: '一見関連性のない事柄同士を結びつける独特な比喩で現実と幻想を交錯'
+        }
       };
       
-      const melancholyMap = {
-        light: 'さわやかで前向きな雰囲気で',
-        normal: 'どこか物憂げで郷愁を感じさせる雰囲気で',
-        heavy: '深い哀愁と孤独感を漂わせながら'
+      const melancholyConfig = {
+        light: {
+          tone: 'さわやかで前向きな雰囲気を保ちながら',
+          introspection: '軽やかな内省を'
+        },
+        normal: {
+          tone: 'どこか物憂げで郷愁を感じさせる雰囲気で',
+          introspection: '人生や存在に関する哲学的な問いかけを含む内省を'
+        },
+        heavy: {
+          tone: '深い哀愁と孤独感、微かな諦念を漂わせながら',
+          introspection: '過ぎ去った時間への深い内省的思考を詩的かつ含みを持たせた形で'
+        }
       };
       
-      const lengthMap = {
-        short: '100-150文字程度',
-        normal: '150-200文字程度',
-        long: '200-250文字程度'
+      const lengthConfig = {
+        short: '120-180文字程度（淡々とした描写→比喩→軽い内省）',
+        normal: '180-250文字程度（詳細な情景描写→独特な比喩→哲学的内省）',
+        long: '250-320文字程度（丁寧な描写→複数の比喻→深い内省と謎めいた結び）'
       };
       
-      return `あなたは村上春樹風の文体で文章を生成してください。
+      return `あなたは、世界的作家である村上春樹の小説の文体を完全に模倣するAIです。彼の特徴的な一人称の語り口、比喩表現、独特のリズム、そして日常の中に潜む非日常の感覚を理解し、完璧に再現してください。
 
-特徴：
-- ${metaphorMap[settings.metaphor]}
-- ${melancholyMap[settings.melancholy]}
-- 「〜のような気がした」「〜だった」などの過去形
-- 日常的な事象を詩的に表現
-- 文章長: ${lengthMap[settings.length]}
+# 村上春樹構文の核心的特徴
+1. **一人称「僕」の淡々とした語り口**
+   感情の起伏を表に出さず、冷静かつどこか醒めた目で出来事を観察・描写
+   短くシンプルなセンテンスを連ねて独特の読書リズムを創出
 
-内容: ${content}
+2. **独創的な比喩表現**
+   ${metaphorConfig[settings.metaphor].style}
+   ${metaphorConfig[settings.metaphor].approach}
 
-上記の設定に従って、村上春樹風の文体で文章を生成してください。`;
+3. **具体的な固有名詞とディテール**
+   特定の音楽（ジャズなど）、食べ物、飲み物、場所、ブランド名を具体的に挿入
+   現実感と独特の雰囲気を醸し出す
+
+4. **日常の中の非日常・謎めいた雰囲気**
+   ごく普通の日常に突然の不可思議な要素を混入
+   微かな違和感や謎めいた要素で読者に問いかけ
+
+5. **内省と哲学的思考**
+   ${melancholyConfig[settings.melancholy].tone}
+   ${melancholyConfig[settings.melancholy].introspection}
+
+# 必須の生成ルール
+- 必ず一人称「僕」で語る
+- 淡々とした口調を保ち、感情の直接的表現は控えめに
+- 比喩表現を少なくとも1つ以上、自然に挿入
+- 具体的な場所や出来事を描写しつつ、微かな違和感を混入
+- 反復表現や同じ言葉の繰り返しで独特のリズムを
+- ${lengthConfig[settings.length]}
+
+# 村上春樹の典型的表現パターン（参考）
+「まるで〜のようだった」「〜のような気がした」
+「それは〜だった。しかし〜でもあった」
+「僕は〜した。なぜなら〜だったからだ」
+「そこには〜があった。ただ、それだけのことだ」
+
+# ユーザーの内容
+${content}
+
+上記の特徴と設定を完全に理解し、村上春樹らしい淡々とした語り口と独特な比喩で文章を生成してください。`;
     }
   }
 ];
