@@ -17,7 +17,7 @@ const syntaxes = [
   {
     id: 'tomonaga',
     name: "友永構文",
-    description: "バチェラー・ジャパンの友永真也風の内省的で感情豊かな関西弁",
+    description: "構文を始めた男。創始者。",
     presets: [
       {
         id: 'standard',
