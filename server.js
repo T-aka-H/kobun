@@ -44,49 +44,49 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const syntaxTemplates = {
   tomonaga: {
     name: "友永構文",
-    description: "感情豊かな関西弁風の表現",
+    description: "世に構文界を作り出した男。構文は友永に始まり、友永に終わる。",
     presets: [
       {
         id: 'standard',
         name: '標準',
         description: 'バランスの取れた友永構文',
-        settings: { intensity: 'normal', dialect: 'weak', length: 'normal' }
+        settings: { intensity: 'normal', introspection: 'normal', length: 'normal' }
       },
       {
         id: 'mild',
         name: '控えめ',
-        description: '関西弁を抑えた上品な友永構文',
-        settings: { intensity: 'mild', dialect: 'none', length: 'short' }
+        description: '落ち着いた友永構文',
+        settings: { intensity: 'mild', introspection: 'light', length: 'short' }
       },
       {
-        id: 'extreme',
+        id: 'bachelor',
         name: 'バチェラー級',
-        description: '感情全開の強烈な友永構文',
-        settings: { intensity: 'extreme', dialect: 'strong', length: 'long' }
+        description: '番組での友永真也そのものの強烈な友永構文',
+        settings: { intensity: 'extreme', introspection: 'deep', length: 'long' }
       }
     ],
     settings: [
       {
         id: 'intensity',
-        name: '強調度合い',
+        name: '感情の強調度',
         type: 'select',
         options: [
           { value: 'mild', label: '控えめ' },
           { value: 'normal', label: '普通' },
-          { value: 'extreme', label: 'バチェラー級' }
+          { value: 'extreme', label: 'バチェラー級（最強）' }
         ],
         default: 'normal'
       },
       {
-        id: 'dialect',
-        name: '関西弁の強さ',
+        id: 'introspection',
+        name: '内省の深さ',
         type: 'select',
         options: [
-          { value: 'none', label: 'なし' },
-          { value: 'weak', label: '弱め' },
-          { value: 'strong', label: '強め' }
+          { value: 'light', label: '軽め' },
+          { value: 'normal', label: '普通' },
+          { value: 'deep', label: '深く内省的' }
         ],
-        default: 'weak'
+        default: 'normal'
       },
       {
         id: 'length',
@@ -102,15 +102,15 @@ const syntaxTemplates = {
     ],
     generatePrompt: (content, settings) => {
       const intensityMap = {
-        mild: '感情表現は控えめに、落ち着いた口調で',
-        normal: '適度に感情を込めて、親しみやすい口調で',
-        extreme: '感情を非常に強く表現し、テンション最大で'
+        mild: '「正直」「ほんまに」などの強調表現を控えめに使い',
+        normal: '「正直」「ほんまに」「めちゃくちゃ」などの強調表現を適度に使い',
+        extreme: '「正直」「ほんまに」「めちゃくちゃ」「真剣に」などの強調表現を多用し、感情を最大限に表現して'
       };
       
-      const dialectMap = {
-        none: '標準語で',
-        weak: '軽く関西弁を混ぜて（「やん」「やで」程度）',
-        strong: '関西弁を強く使って（「めっちゃ」「ほんま」「なんやねん」など多用）'
+      const introspectionMap = {
+        light: '軽く自分の気持ちを振り返りながら',
+        normal: '自分の感情や考えを丁寧に内省しながら',
+        deep: '深く自分の内面と向き合い、詩的で比喩的な表現も交えながら'
       };
       
       const lengthMap = {
@@ -119,21 +119,28 @@ const syntaxTemplates = {
         long: '200-250文字程度'
       };
       
-      return `あなたは友永構文で文章を生成してください。
+      return `あなたはバチェラー・ジャパンの友永真也さんの話し方で文章を生成してください。
+
+友永真也さんの特徴：
+- 神戸出身の関西弁（「〜やん」「〜やで」「〜やって」など）
+- 強調表現の多用：「正直」「ほんまに」「めちゃくちゃ」「真剣に」
+- 内省的で詩的な表現
+- 感情を丁寧に、時に比喩的に語るスタイル
+- 飄々としながらも真剣な語り口
 
 設定：
-- 強調度合い: ${intensityMap[settings.intensity]}
-- 関西弁: ${dialectMap[settings.dialect]}
+- 感情強調: ${intensityMap[settings.intensity]}
+- 内省度: ${introspectionMap[settings.introspection]}
 - 文章長: ${lengthMap[settings.length]}
 
-特徴：
-- 親しみやすい口調
-- 「〜やん！」「〜やで！」などの語尾
-- 設定に応じた感情表現と関西弁の使用
+例文の雰囲気：
+「正直、めちゃくちゃ悩みました」
+「ほんまに真剣に、真剣に考えました」
+「がんばってくれたんやって。みんな真剣に向きあってるんやって。ほんまに、ありがとう」
 
 内容: ${content}
 
-上記の設定に従って、友永構文で文章を生成してください。`;
+上記の特徴と設定に従って、友永真也さんらしい話し方で文章を生成してください。`;
     }
   },
   
