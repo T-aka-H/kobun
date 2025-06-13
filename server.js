@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
@@ -9,7 +10,26 @@ const port = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// 静的ファイルの配信 - publicディレクトリを使用
 app.use(express.static('public'));
+app.use(express.static('.'));
+
+// ルートパスでindex.htmlを返す
+app.get('/', (req, res) => {
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  const fallbackPath = path.join(__dirname, 'index.html');
+  
+  // publicフォルダ内のindex.htmlを優先、なければルートのindex.htmlを使用
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else if (fs.existsSync(fallbackPath)) {
+    res.sendFile(fallbackPath);
+  } else {
+    res.status(404).send('index.html not found');
+  }
+});
 
 // Gemini API setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
