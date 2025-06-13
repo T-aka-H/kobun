@@ -150,26 +150,26 @@ ${content}
   },
   {
     id: 'koizumi',
-    name: "小泉構文",
-    description: "小泉進次郎風の自明な再定義と抽象的表現",
+    name: "小泉進次郎構文",
+    description: "日本の政治家・小泉進次郎氏の独特な論理展開と抽象的表現",
     presets: [
       {
         id: 'standard',
         name: '標準',
-        description: 'バランスの取れた小泉構文',
-        settings: { abstractness: 'normal', repetition: 'normal', length: 'normal' }
+        description: 'バランスの取れた小泉進次郎構文',
+        settings: { abstractness: 'normal', repetition: 'normal', poeticness: 'normal', length: 'normal' }
       },
       {
         id: 'mild',
         name: '控えめ',
-        description: '分かりやすい小泉構文',
-        settings: { abstractness: 'low', repetition: 'minimal', length: 'short' }
+        description: '理解しやすい小泉進次郎構文',
+        settings: { abstractness: 'low', repetition: 'minimal', poeticness: 'light', length: 'short' }
       },
       {
         id: 'extreme',
         name: '進次郎級',
-        description: '究極の抽象性を持つ小泉構文',
-        settings: { abstractness: 'extreme', repetition: 'heavy', length: 'long' }
+        description: '究極の抽象性と禅問答的な小泉進次郎構文',
+        settings: { abstractness: 'extreme', repetition: 'heavy', poeticness: 'deep', length: 'long' }
       }
     ],
     settings: [
@@ -196,13 +196,24 @@ ${content}
         default: 'normal'
       },
       {
+        id: 'poeticness',
+        name: 'ポエム度・禅問答感',
+        type: 'select',
+        options: [
+          { value: 'light', label: '軽め' },
+          { value: 'normal', label: '普通' },
+          { value: 'deep', label: '深い詩的表現' }
+        ],
+        default: 'normal'
+      },
+      {
         id: 'length',
         name: '文章の長さ',
         type: 'select',
         options: [
           { value: 'short', label: '短め（120-180文字）' },
           { value: 'normal', label: '普通（180-250文字）' },
-          { value: 'long', label: '長め（250-320文字）' }
+          { value: 'long', label: '長め（250-350文字）' }
         ],
         default: 'normal'
       }
@@ -211,53 +222,81 @@ ${content}
       const abstractnessConfig = {
         low: {
           level: 'やや具体的な表現を保ちつつ、時折抽象的な概念を織り交ぜ',
-          conclusion: '比較的明確で理解しやすい結論に'
+          conclusion: '比較的明確で理解しやすい結論に',
+          example: '具体的な行動や結果を示しながらも、その本質的意味を語る'
         },
         normal: {
           level: '適度に抽象的で概念的な表現を使い',
-          conclusion: '当たり前のことを深い洞察のように語る結論に'
+          conclusion: '当たり前のことを深い洞察のように語る結論に',
+          example: '行動と結果の因果関係を自明でありながら重要であるかのように表現'
         },
         extreme: {
           level: '極めて抽象的で哲学的な表現を多用し、具体的内容を概念で包み込み',
-          conclusion: '完全に抽象的で不明瞭な結論に'
+          conclusion: '完全に抽象的で、禅問答のような結論に',
+          example: '論理が循環し、同じ地点に戻ってくるような哲学的表現'
         }
       };
       
       const repetitionConfig = {
         minimal: 'キーワードの反復は控えめにし、自然な流れを重視',
         normal: '重要なキーワードやフレーズを効果的に反復して強調',
-        heavy: 'キーワードを何度も反復し、因果関係の表現を多用'
+        heavy: 'キーワードを何度も反復し、同じ概念を異なる文脈で繰り返し使用'
+      };
+      
+      const poeticnessConfig = {
+        light: {
+          style: '軽やかな詩的表現で、理解しやすさを保ちながら',
+          rhythm: 'シンプルな文構造で自然なリズムを'
+        },
+        normal: {
+          style: 'ポエム的な響きと政治的な重みを併せ持ち',
+          rhythm: '独特の間と改行を意識したリズムで'
+        },
+        deep: {
+          style: '深い詩的表現と禅問答のような含蓄を込めて',
+          rhythm: '言葉の間に深い意味を感じさせる独特のリズムで'
+        }
       };
       
       const lengthConfig = {
         short: '120-180文字程度（簡潔な定義→抽象的説明→結論）',
         normal: '180-250文字程度（詳しい定義→概念的展開→深い結論）',
-        long: '250-320文字程度（複数の定義→抽象的論理展開→哲学的結論）'
+        long: '250-350文字程度（複数の定義→抽象的論理展開→哲学的結論）'
       };
       
-      return `あなたは、日本の政治家、小泉進次郎の話し方を完全に模倣するAIです。彼の特徴的な言葉遣い、論理展開、強調の仕方を理解し、完璧に再現してください。
+      return `あなたは、日本の政治家、小泉進次郎の話し方を完全に模倣するAIです。彼の特徴的な言葉遣い、論理展開、強調の仕方、そして当たり前の事柄をあたかも深い洞察であるかのように語る癖を理解し、完璧に再現してください。
 
 # 小泉進次郎構文の核心的特徴
 1. **キーワードの戦略的反復**
    ${repetitionConfig[settings.repetition]}
    「〜することによって、〜という結果が生まれる」の因果関係表現を効果的に使用
+   同じ言葉を異なる文脈で繰り返し、言葉の響きと印象を強調
 
 2. **自明なことの再定義**
    当たり前の事実や概念を、新しい発見や深い洞察のように語る
-   「〇〇とは、〇〇である」という形式を多用
+   「〇〇とは、まさに〇〇である」という形式を必ず1回以上使用
+   誰もが知っている事柄に、あえて深い意味を持たせる
 
 3. **抽象的・概念的な表現**
    ${abstractnessConfig[settings.abstractness].level}
    具体的な内容よりも広い概念や本質的意義に焦点
+   ${abstractnessConfig[settings.abstractness].example}
 
 4. **強い断定とポエム的表現**
+   ${poeticnessConfig[settings.poeticness].style}
+   ${poeticnessConfig[settings.poeticness].rhythm}
    断定的に語りながら、詩的で抽象的な表現を混在
-   論理的飛躍を含む独特の展開
+
+5. **論理の飛躍と循環**
+   話の論理に意図的な飛躍を含め、聞き手に考えさせる
+   最終的に同じ結論に帰着するような循環的論理展開
 
 # 必須の生成ルール
 - 一人称は設けず、客観的または第三者的視点で語る
-- 「〜することによって、〜という結果が生まれる」「〜とは、〜である」を効果的に使用
-- 提供されたトピックを反復して使用し、強調する
+- 「〜することによって、〜という結果が生まれる」を少なくとも1回使用
+- 「〇〇とは、まさに〇〇である」の再定義を必ず含める
+- 「これは重要なことです」「なぜなら〜だからです」などの強調表現を効果的に使用
+- 提供されたトピックのキーワードを複数回、異なる文脈で反復
 - 具体的内容を抽象的な言葉で包み込む
 - ${abstractnessConfig[settings.abstractness].conclusion}
 - ${lengthConfig[settings.length]}
@@ -267,11 +306,19 @@ ${content}
 「〇〇とは、まさに〇〇である」
 「これは重要なことです。なぜなら〜だからです」
 「〇〇をするということは、〇〇をしたということです」
+「今のままではいけないと思います。だからこそ、今のままではいけないと思っている」
+「30年後の自分は、30年後の自分が考えればいい」
+
+# 生成例のエッセンス（直接コピーはしない）
+- 行動そのものが結果であるという循環論理
+- 場所や物事の本質を抽象的に再定義
+- 「〜ということです」で締めくくる断定
+- 経験や瞬間の価値を概念的に語る
 
 # ユーザーの内容
 ${content}
 
-上記の特徴と設定を完全に理解し、小泉進次郎らしい論理展開と表現で文章を生成してください。`;
+上記の特徴と設定を完全に理解し、小泉進次郎らしい論理展開と表現で文章を生成してください。当たり前のことを、まるで深い洞察であるかのように、独特のリズムとポエム的な響きを持たせて表現してください。`;
     }
   },
   {
@@ -367,7 +414,7 @@ ${content}
       const lengthConfig = {
         short: '120-180文字程度（淡々とした描写→比喩→軽い内省）',
         normal: '180-250文字程度（詳細な情景描写→独特な比喩→哲学的内省）',
-        long: '250-320文字程度（丁寧な描写→複数の比喻→深い内省と謎めいた結び）'
+        long: '250-320文字程度（丁寧な描写→複数の比喩→深い内省と謎めいた結び）'
       };
       
       return `あなたは、世界的作家である村上春樹の小説の文体を完全に模倣するAIです。彼の特徴的な一人称の語り口、比喩表現、独特のリズム、そして日常の中に潜む非日常の感覚を理解し、完璧に再現してください。
