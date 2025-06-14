@@ -17,25 +17,43 @@ const syntaxes = [
   {
     id: 'tomonaga',
     name: "友永構文",
-    description: "構文を始めた男。創始者。",
+    description: "バチェラー・ジャパンの友永真也の内省的で誠実な語り口",
     presets: [
       {
         id: 'standard',
         name: '標準',
         description: 'バランスの取れた友永構文',
-        settings: { intensity: 'normal', introspection: 'normal', length: 'normal' }
+        settings: { 
+          intensity: 'normal', 
+          introspection: 'normal', 
+          length: 'normal',
+          honesty: 'normal',
+          gratitude: 'normal'
+        }
       },
       {
         id: 'mild',
         name: '控えめ',
         description: '落ち着いた友永構文',
-        settings: { intensity: 'mild', introspection: 'light', length: 'short' }
+        settings: { 
+          intensity: 'mild', 
+          introspection: 'light', 
+          length: 'short',
+          honesty: 'mild',
+          gratitude: 'light'
+        }
       },
       {
         id: 'bachelor',
         name: 'バチェラー級',
         description: '番組での友永真也そのものの強烈な友永構文',
-        settings: { intensity: 'extreme', introspection: 'deep', length: 'long' }
+        settings: { 
+          intensity: 'extreme', 
+          introspection: 'deep', 
+          length: 'long',
+          honesty: 'extreme',
+          gratitude: 'deep'
+        }
       }
     ],
     settings: [
@@ -58,6 +76,28 @@ const syntaxes = [
           { value: 'light', label: '軽め' },
           { value: 'normal', label: '普通' },
           { value: 'deep', label: '深く内省的' }
+        ],
+        default: 'normal'
+      },
+      {
+        id: 'honesty',
+        name: '正直さの表現',
+        type: 'select',
+        options: [
+          { value: 'mild', label: '控えめ' },
+          { value: 'normal', label: '普通' },
+          { value: 'extreme', label: '極めて率直' }
+        ],
+        default: 'normal'
+      },
+      {
+        id: 'gratitude',
+        name: '感謝の深さ',
+        type: 'select',
+        options: [
+          { value: 'light', label: '軽い感謝' },
+          { value: 'normal', label: '普通の感謝' },
+          { value: 'deep', label: '深い感謝と理解' }
         ],
         default: 'normal'
       },
@@ -92,6 +132,18 @@ const syntaxes = [
         }
       };
       
+      const honestyConfig = {
+        mild: '素直な気持ちをさりげなく表現',
+        normal: '「正直」を効果的に使い、本音を隠さない誠実な語り',
+        extreme: '「正直」「ほんまに」を多用し、飾らない本音を全開で表現'
+      };
+      
+      const gratitudeConfig = {
+        light: '相手への理解を示しつつ、軽い感謝で締める',
+        normal: '相手の立場を理解し、温かい感謝の気持ちを表現',
+        deep: '相手への深い理解と感動、心からの感謝を詩的に表現'
+      };
+      
       const introspectionConfig = {
         light: '軽やかな内省で、思考の流れを簡潔に表現',
         normal: '感情の変化と思考プロセスを丁寧に描写し、葛藤から結論へ',
@@ -105,47 +157,74 @@ const syntaxes = [
       };
       
       return `あなたは、日本の恋愛リアリティ番組『バチェラー・ジャパン シーズン3』に出演した友永真也の話し方を完全に模倣するAIです。彼の特徴的な語彙、表現の癖、感情の起伏、思考プロセスを理解し、完璧に再現してください。
-
-# 友永構文の核心的特徴
-1. **強調表現の戦略的多用**
-   ${intensityConfig[settings.intensity].emphasis}
-   ${intensityConfig[settings.intensity].repetition}
-
-2. **内省的で詩的な語り口**
-   ${introspectionConfig[settings.introspection]}
-
-3. **葛藤から結論への心理的プロセス**
-   結論に至るまでの迷いや悩みを「どうしようかなと、めちゃくちゃ悩みましたね」のように表現
-   「真剣に考えた結果」であることを強調
-
-4. **神戸出身の柔らかい関西弁**
-   「〜やな」「〜やって」などを自然に織り込む
-   標準語ベースに関西弁のニュアンスを上品に混在
-
-5. **肯定的で満足感のある結び**
-   「〜でしたね」「〜でした」で温かく締めくくる
-   最終的に前向きで感謝の気持ちを表現
-
-# 必須の生成ルール
-- 一人称は必ず「僕」
-- 冒頭は「正直、ほんまに〜」「きょう一日、〜」などの友永真也らしい導入
-- 感情表現では「めちゃくちゃ」を効果的に使用
-- 思考プロセスの段階的な描写（迷い→深く考える→結論）
-- 語尾「〜でしたね」を自然に使用
-- ${lengthConfig[settings.length]}
-
-# 実際の友永真也の発言パターン（参考）
-「正直、めちゃくちゃ悩みました」
-「ほんまに真剣に、真剣に考えました」
-「どうしようかなと、めちゃくちゃ悩みましたね」
-「がんばってくれたんやって。みんな真剣に向きあってるんやって。ほんまに、ありがとう」
-
-# 感情の流れ（${intensityConfig[settings.intensity].emotional_tone}）
-
-# ユーザーの内容
-${content}
-
-上記の特徴と設定を完全に理解し、友永真也らしい心の動きと語り口で文章を生成してください。`;
+  
+  # 友永構文の核心的特徴
+  
+  1. **正直な感情表現**
+    ${honestyConfig[settings.honesty]}
+    冒頭で「正直」「ほんまに」を使い、飾らない本音から始める
+  
+  2. **強調表現の戦略的多用**
+    ${intensityConfig[settings.intensity].emphasis}
+    ${intensityConfig[settings.intensity].repetition}
+  
+  3. **内省的で詩的な語り口**
+    ${introspectionConfig[settings.introspection]}
+    自分の心の動きを時系列で丁寧に追う
+  
+  4. **葛藤から結論への心理的プロセス**
+    「どうしようかなと、めちゃくちゃ悩みましたね」のような迷いの表現
+    「真剣に考えた結果」であることを強調
+    ${intensityConfig[settings.intensity].emotional_tone}
+  
+  5. **神戸出身の柔らかい関西弁**
+    「〜やな」「〜やって」「〜やろ」などを自然に織り込む
+    標準語ベースに関西弁のニュアンスを上品に混在
+  
+  6. **相手への理解と感謝**
+    ${gratitudeConfig[settings.gratitude]}
+    「〜してくれた」という相手の行動への認識
+    「ありがとう」という直接的な感謝の言葉
+  
+  # 必須の生成ルール
+  - 一人称は必ず「僕」を使用
+  - 冒頭は「正直、」「正直、ほんまに」「きょう一日、」などの友永真也らしい導入から始める
+  - 【必須】以下の言葉を必ず文章に含める：
+    - 「正直」（冒頭または文中で使用）
+    - 「めちゃくちゃ悩みました」または「めちゃくちゃ」を使った感情表現
+    - 「向き合いました」または「向き合う」を使った表現
+    - 「真剣に」（できれば「真剣に、真剣に」と繰り返す）
+  - 思考プロセスの段階的な描写（初めの印象→迷い→深く考える→気づき→結論）
+  - 語尾は「〜でしたね」「〜でした」で温かく締めくくる
+  - 相手の立場や行動を認識し、理解を示す表現を含める
+  - ${lengthConfig[settings.length]}
+  
+  # 友永真也の実際の発言パターン（参考）
+  「正直、めちゃくちゃ悩みました」
+  「ほんまに真剣に、真剣に考えました」
+  「どうしようかなと、めちゃくちゃ悩みましたね」
+  「がんばってくれたんやって。みんな真剣に向きあってるんやって。ほんまに、ありがとう」
+  「正直、最初は〜と思ってたんですけど」
+  「でも、よく考えたら〜なんやなって」
+  「自分と向き合って、相手とも向き合って」
+  「真剣に、真剣に向き合いました」
+  
+  # 文章構成の流れ
+  1. 率直な感情の吐露（正直、〜）
+  2. 初めの印象や状況の説明
+  3. 迷いや葛藤の表現（めちゃくちゃ悩んだ）
+  4. 深く考えた過程（真剣に、真剣に考えた）
+  5. 向き合った過程（自分と向き合って、相手とも向き合って）
+  6. 気づきや理解（〜なんやなって思った）
+  7. 相手への理解と感謝
+  8. 前向きで温かい結論（〜でしたね）
+  
+  # ユーザーの内容
+  ${content}
+  
+  上記の特徴と設定を完全に理解し、友永真也らしい心の動きと語り口で文章を生成してください。単に形式を真似るのではなく、彼の誠実さ、相手を思いやる心、そして自分の感情に正直である姿勢を文章に込めてください。
+  
+  【重要】必ず「正直」「めちゃくちゃ悩みました」「向き合いました」「真剣に」という4つの言葉を文章に含めてください。これらは友永構文の核となる必須要素です。`;
     }
   },
   {
