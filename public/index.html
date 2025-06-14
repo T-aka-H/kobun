@@ -12,6 +12,23 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- PWA用アイコン -->
+    <link rel="icon" type="image/png" sizes="192x192" href="../webapp-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="../webapp-icon-192x192.png">
+    
+    <!-- iOS用アイコン -->
+    <link rel="apple-touch-icon" href="../webapp-icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/webapp-icon-192x192.png">
+    
+    <!-- PWA設定 -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#f9e79f">
+    
+    <!-- iOS PWA設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="構文">
+
     <style>
         * {
             margin: 0;
