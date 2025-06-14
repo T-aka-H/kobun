@@ -1,0 +1,36 @@
+{
+    "name": "構文 - ウェブアプリ",
+    "short_name": "構文",
+    "description": "構文解析のためのウェブアプリケーション",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f7f1e3",
+    "theme_color": "#f9e79f",
+    "orientation": "portrait",
+    "icons": [
+      {
+        "src": "../webapp-icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "../webapp-icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "maskable"
+      },
+      {
+        "src": "../webapp-icon-192x192.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "../webapp-icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }
